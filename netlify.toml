@@ -3,11 +3,12 @@
   publish = "dist"
   functions = "netlify/functions"
 
-# Static files first (before catch-all)
+# Static files first (prevent catch-all from intercepting)
 [[redirects]]
   from = "/manifest.json"
   to = "/manifest.json"
   status = 200
+  force = false
 
 # API redirects
 [[redirects]]
