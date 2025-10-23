@@ -221,21 +221,6 @@ const ExpenseTracker = () => {
     other: { icon: '📦', label: 'Other' }
   };
 
-  // Quick setup for first-time users
-  const quickSetupBudgets = [
-    { amount: 50000, label: '₨50K', days: 30 },
-    { amount: 100000, label: '₨100K', days: 30 },
-    { amount: 150000, label: '₨150K', days: 30 },
-    { amount: 200000, label: '₨200K', days: 30 },
-  ];
-
-  const quickAddExpenses = [
-    { name: 'Grocery Shopping', amount: 5000, category: 'groceries' },
-    { name: 'Fuel', amount: 3000, category: 'transportation' },
-    { name: 'Electricity Bill', amount: 8000, category: 'utilities' },
-    { name: 'Internet Bill', amount: 2000, category: 'utilities' },
-  ];
-
   // Main App UI
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-4">
@@ -334,86 +319,29 @@ const ExpenseTracker = () => {
               <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-6">
                 <Wallet className="mx-auto text-purple-600 mb-4" size={48} />
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Set Your Monthly Budget</h3>
-                <p className="text-gray-600 mb-6">Choose a quick option or set custom amount</p>
-                
-                {/* Quick Budget Options */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  {quickSetupBudgets.map((option) => (
-                    <button
-                      key={option.amount}
-                      onClick={() => {
-                        setBudgetAmount(option.amount.toString());
-                        setBudgetDays(option.days.toString());
-                        setShowAddBudget(true);
-                      }}
-                      className="p-3 bg-white rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all text-center"
-                    >
-                      <div className="font-bold text-purple-600">{option.label}</div>
-                      <div className="text-sm text-gray-600">{option.days} days</div>
-                    </button>
-                  ))}
-                </div>
+                <p className="text-gray-600 mb-6">Get started by setting your budget amount</p>
                 
                 <button
                   onClick={() => setShowAddBudget(true)}
                   className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2 font-semibold shadow-lg"
                 >
                   <Plus size={20} />
-                  Custom Budget
+                  Set Budget
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Quick Add Expense Section */}
+        {/* Add Expense Button - Only show if budget exists */}
         {budget && (
-          <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border border-purple-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Quick Add</h3>
-              <button
-                onClick={() => setShowAddExpense(true)}
-                className="text-purple-600 hover:text-purple-700 text-sm font-medium"
-              >
-                Custom expense →
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {quickAddExpenses.map((expense, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    const newExpense = {
-                      id: Date.now() + index,
-                      name: expense.name,
-                      amount: expense.amount,
-                      category: expense.category,
-                      date: new Date().toISOString().split('T')[0]
-                    };
-                    const updatedExpenses = [newExpense, ...expenses];
-                    setExpenses(updatedExpenses);
-                    localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
-                  }}
-                  className="p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:border-purple-300 hover:from-purple-50 hover:to-purple-100 transition-all text-left"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span>{categories[expense.category].icon}</span>
-                    <span className="font-medium text-gray-800 text-sm">{expense.name}</span>
-                  </div>
-                  <div className="text-purple-600 font-bold">₨{expense.amount.toLocaleString()}</div>
-                </button>
-              ))}
-            </div>
-            
-            <button
-              onClick={() => setShowAddExpense(true)}
-              className="w-full mt-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2 font-semibold shadow-lg"
-            >
-              <Plus size={20} />
-              Add Custom Expense
-            </button>
-          </div>
+          <button
+            onClick={() => setShowAddExpense(true)}
+            className="w-full mb-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-3xl shadow-xl hover:shadow-2xl hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-3 font-semibold text-lg border border-purple-200"
+          >
+            <Plus size={24} />
+            Add New Expense
+          </button>
         )}
 
         {/* Add Budget Modal */}
