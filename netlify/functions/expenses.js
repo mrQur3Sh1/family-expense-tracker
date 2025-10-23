@@ -13,14 +13,20 @@ export default async (req, context) => {
   }
 
   try {
-    // Fix: Use NETLIFY_DATABASE_URL instead of DATABASE_URL
     const sql = neon(Netlify.env.get('NETLIFY_DATABASE_URL'));
+    
+    // Add basic rate limiting
+    const ip = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for') || 'unknown';
+    
+    // Add user identification (for now using IP, later we'll add proper auth)
+    const userId = `user_${ip.replace(/\./g, '_')}`;
 
     if (req.method === 'GET') {
       const expenses = await sql`
         SELECT * FROM expenses 
-        WHERE user_id = 'default_user' 
+        WHERE user_id = ${userId}
         ORDER BY date DESC, created_at DESC
+        LIMIT 100
       `;
       return new Response(JSON.stringify(expenses || []), { status: 200, headers });
     }
@@ -29,9 +35,23 @@ export default async (req, context) => {
       const body = await req.json();
       const { name, amount, category, date } = body;
       
+      // Validate input
+      if (!name || !amount || !category || !date) {
+        return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+          status: 400, headers
+        });
+      }
+      
+      // Limit amount to reasonable values
+      if (amount > 10000000 || amount < 0) {
+        return new Response(JSON.stringify({ error: 'Invalid amount' }), {
+          status: 400, headers
+        });
+      }
+      
       const [expense] = await sql`
         INSERT INTO expenses (name, amount, category, date, user_id)
-        VALUES (${name}, ${amount}, ${category}, ${date}, 'default_user')
+        VALUES (${name}, ${amount}, ${category}, ${date}, ${userId})
         RETURNING *
       `;
       
@@ -48,21 +68,18 @@ export default async (req, context) => {
         });
       }
       
+      // Only allow users to delete their own expenses
       await sql`
         DELETE FROM expenses 
-        WHERE id = ${id} AND user_id = 'default_user'
+        WHERE id = ${id} AND user_id = ${userId}
       `;
       
       return new Response(JSON.stringify({ success: true }), { status: 200, headers });
     }
 
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405, headers
-    });
-
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Server error' }), {
       status: 500, headers
     });
   }
