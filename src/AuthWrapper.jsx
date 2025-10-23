@@ -112,11 +112,9 @@ const AuthWrapper = ({ children }) => {
             
             <div className="text-center space-y-2">
               <div className="text-sm text-gray-500">
-                Try PIN: <span className="font-mono bg-gray-100 px-2 py-1 rounded">1234</span>
+                Try PIN: <span className="font-mono bg-gray-100 px-2 py-1 rounded">Qureshi</span>
               </div>
-              <div className="text-xs text-gray-400">
-                Using environment variable: APP_PIN
-              </div>
+    
             </div>
           </div>
         </div>
