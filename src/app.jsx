@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, ShoppingCart, Calendar, Plus, Trash2, TrendingDown, Edit2 } from 'lucide-react';
+import { Wallet, Calendar, Plus, Trash2, TrendingDown, Edit2 } from 'lucide-react';
 
 const ExpenseTracker = () => {
   const [budget, setBudget] = useState(null);
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showAddBudget, setShowAddBudget] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
   
@@ -17,65 +18,129 @@ const ExpenseTracker = () => {
   const [expenseCategory, setExpenseCategory] = useState('groceries');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Load data from memory on mount
+  // Load data from database on mount
   useEffect(() => {
-    const savedBudget = localStorage.getItem('budget');
-    const savedExpenses = localStorage.getItem('expenses');
-    
-    if (savedBudget) setBudget(JSON.parse(savedBudget));
-    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+    loadData();
   }, []);
 
-  // Save data to memory whenever it changes
-  useEffect(() => {
-    if (budget) localStorage.setItem('budget', JSON.stringify(budget));
-  }, [budget]);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch budget
+      const budgetRes = await fetch('/api/budget');
+      const budgetData = await budgetRes.json();
+      if (budgetData && budgetData.amount) {
+        setBudget({
+          amount: parseFloat(budgetData.amount),
+          startDate: budgetData.start_date,
+          endDate: budgetData.end_date,
+          days: budgetData.days
+        });
+      }
+      
+      // Fetch expenses
+      const expensesRes = await fetch('/api/expenses');
+      const expensesData = await expensesRes.json();
+      setExpenses(expensesData.map(exp => ({
+        id: exp.id,
+        name: exp.name,
+        amount: parseFloat(exp.amount),
+        category: exp.category,
+        date: exp.date
+      })));
+      
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
-
-  const handleAddBudget = () => {
+  const handleAddBudget = async () => {
     if (!budgetAmount || !budgetDays) return;
     
     const endDate = new Date(budgetDate);
     endDate.setDate(endDate.getDate() + parseInt(budgetDays));
     
-    setBudget({
-      amount: parseFloat(budgetAmount),
-      startDate: budgetDate,
-      endDate: endDate.toISOString().split('T')[0],
-      days: parseInt(budgetDays)
-    });
-    
-    setBudgetAmount('');
-    setBudgetDays('');
-    setBudgetDate(new Date().toISOString().split('T')[0]);
-    setShowAddBudget(false);
+    try {
+      const response = await fetch('/api/budget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: parseFloat(budgetAmount),
+          startDate: budgetDate,
+          endDate: endDate.toISOString().split('T')[0],
+          days: parseInt(budgetDays)
+        })
+      });
+      
+      const data = await response.json();
+      setBudget({
+        amount: parseFloat(data.amount),
+        startDate: data.start_date,
+        endDate: data.end_date,
+        days: data.days
+      });
+      
+      setBudgetAmount('');
+      setBudgetDays('');
+      setBudgetDate(new Date().toISOString().split('T')[0]);
+      setShowAddBudget(false);
+    } catch (error) {
+      console.error('Error saving budget:', error);
+      alert('Failed to save budget. Please try again.');
+    }
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!expenseName || !expenseAmount) return;
     
-    const newExpense = {
-      id: Date.now(),
-      name: expenseName,
-      amount: parseFloat(expenseAmount),
-      category: expenseCategory,
-      date: expenseDate
-    };
-    
-    setExpenses([newExpense, ...expenses]);
-    
-    setExpenseName('');
-    setExpenseAmount('');
-    setExpenseCategory('groceries');
-    setExpenseDate(new Date().toISOString().split('T')[0]);
-    setShowAddExpense(false);
+    try {
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: expenseName,
+          amount: parseFloat(expenseAmount),
+          category: expenseCategory,
+          date: expenseDate
+        })
+      });
+      
+      const data = await response.json();
+      const newExpense = {
+        id: data.id,
+        name: data.name,
+        amount: parseFloat(data.amount),
+        category: data.category,
+        date: data.date
+      };
+      
+      setExpenses([newExpense, ...expenses]);
+      
+      setExpenseName('');
+      setExpenseAmount('');
+      setExpenseCategory('groceries');
+      setExpenseDate(new Date().toISOString().split('T')[0]);
+      setShowAddExpense(false);
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      alert('Failed to add expense. Please try again.');
+    }
   };
 
-  const handleDeleteExpense = (id) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
+  const handleDeleteExpense = async (id) => {
+    try {
+      await fetch(`/api/expenses?id=${id}`, {
+        method: 'DELETE'
+      });
+      
+      setExpenses(expenses.filter(exp => exp.id !== id));
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      alert('Failed to delete expense. Please try again.');
+    }
   };
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -88,6 +153,17 @@ const ExpenseTracker = () => {
     utilities: { icon: '⚡', label: 'Utilities' },
     other: { icon: '📦', label: 'Other' }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4">
