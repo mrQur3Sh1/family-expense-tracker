@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, ShoppingCart, Calendar, Plus, Trash2, TrendingDown, Edit2 } from 'lucide-react';
+import { Wallet, Calendar, Plus, Trash2, TrendingDown, Edit2 } from 'lucide-react';
+
+const API_BASE = '/api';
 
 const ExpenseTracker = () => {
   const [budget, setBudget] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [showAddBudget, setShowAddBudget] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Form states
   const [budgetAmount, setBudgetAmount] = useState('');
@@ -17,65 +21,173 @@ const ExpenseTracker = () => {
   const [expenseCategory, setExpenseCategory] = useState('groceries');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Load data from memory on mount
+  // Load data from API on mount
   useEffect(() => {
-    const savedBudget = localStorage.getItem('budget');
-    const savedExpenses = localStorage.getItem('expenses');
-    
-    if (savedBudget) setBudget(JSON.parse(savedBudget));
-    if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+    loadData();
   }, []);
 
-  // Save data to memory whenever it changes
-  useEffect(() => {
-    if (budget) localStorage.setItem('budget', JSON.stringify(budget));
-  }, [budget]);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load budget
+      const budgetRes = await fetch(`${API_BASE}/budget`);
+      if (budgetRes.ok) {
+        const budgetData = await budgetRes.json();
+        if (budgetData) {
+          setBudget({
+            amount: budgetData.amount,
+            startDate: budgetData.start_date,
+            endDate: budgetData.end_date,
+            days: budgetData.days
+          });
+        }
+      }
+      
+      // Load expenses
+      const expensesRes = await fetch(`${API_BASE}/expenses`);
+      if (expensesRes.ok) {
+        const expensesData = await expensesRes.json();
+        setExpenses(expensesData.map(exp => ({
+          id: exp.id,
+          name: exp.name,
+          amount: exp.amount,
+          category: exp.category,
+          date: exp.date
+        })));
+      }
+      
+      setError(null);
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError('Failed to load data. Using local storage as fallback.');
+      // Fallback to localStorage
+      const savedBudget = localStorage.getItem('budget');
+      const savedExpenses = localStorage.getItem('expenses');
+      if (savedBudget) setBudget(JSON.parse(savedBudget));
+      if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
-
-  const handleAddBudget = () => {
+  const handleAddBudget = async () => {
     if (!budgetAmount || !budgetDays) return;
     
     const endDate = new Date(budgetDate);
     endDate.setDate(endDate.getDate() + parseInt(budgetDays));
     
-    setBudget({
+    const budgetData = {
       amount: parseFloat(budgetAmount),
       startDate: budgetDate,
       endDate: endDate.toISOString().split('T')[0],
       days: parseInt(budgetDays)
-    });
-    
-    setBudgetAmount('');
-    setBudgetDays('');
-    setBudgetDate(new Date().toISOString().split('T')[0]);
-    setShowAddBudget(false);
+    };
+
+    try {
+      const response = await fetch(`${API_BASE}/budget`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(budgetData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save budget');
+      }
+
+      setBudget(budgetData);
+      localStorage.setItem('budget', JSON.stringify(budgetData));
+      
+      setBudgetAmount('');
+      setBudgetDays('');
+      setBudgetDate(new Date().toISOString().split('T')[0]);
+      setShowAddBudget(false);
+      setError(null);
+    } catch (err) {
+      console.error('Error saving budget:', err);
+      setError('Failed to save budget to database. Saved locally instead.');
+      // Fallback to localStorage
+      setBudget(budgetData);
+      localStorage.setItem('budget', JSON.stringify(budgetData));
+      setShowAddBudget(false);
+    }
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!expenseName || !expenseAmount) return;
     
     const newExpense = {
-      id: Date.now(),
       name: expenseName,
       amount: parseFloat(expenseAmount),
       category: expenseCategory,
       date: expenseDate
     };
-    
-    setExpenses([newExpense, ...expenses]);
-    
-    setExpenseName('');
-    setExpenseAmount('');
-    setExpenseCategory('groceries');
-    setExpenseDate(new Date().toISOString().split('T')[0]);
-    setShowAddExpense(false);
+
+    try {
+      const response = await fetch(`${API_BASE}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newExpense)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save expense');
+      }
+
+      const savedExpense = await response.json();
+      const expenseWithId = {
+        id: savedExpense.id,
+        name: savedExpense.name,
+        amount: savedExpense.amount,
+        category: savedExpense.category,
+        date: savedExpense.date
+      };
+
+      setExpenses([expenseWithId, ...expenses]);
+      localStorage.setItem('expenses', JSON.stringify([expenseWithId, ...expenses]));
+      
+      setExpenseName('');
+      setExpenseAmount('');
+      setExpenseCategory('groceries');
+      setExpenseDate(new Date().toISOString().split('T')[0]);
+      setShowAddExpense(false);
+      setError(null);
+    } catch (err) {
+      console.error('Error saving expense:', err);
+      setError('Failed to save expense to database. Saved locally instead.');
+      // Fallback to localStorage
+      const localExpense = { ...newExpense, id: Date.now() };
+      const updatedExpenses = [localExpense, ...expenses];
+      setExpenses(updatedExpenses);
+      localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
+      setShowAddExpense(false);
+    }
   };
 
-  const handleDeleteExpense = (id) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
+  const handleDeleteExpense = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE}/expenses?id=${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete expense');
+      }
+
+      const updatedExpenses = expenses.filter(exp => exp.id !== id);
+      setExpenses(updatedExpenses);
+      localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
+      setError(null);
+    } catch (err) {
+      console.error('Error deleting expense:', err);
+      setError('Failed to delete from database. Removed locally.');
+      // Fallback to localStorage
+      const updatedExpenses = expenses.filter(exp => exp.id !== id);
+      setExpenses(updatedExpenses);
+      localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
+    }
   };
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -89,9 +201,27 @@ const ExpenseTracker = () => {
     other: { icon: '📦', label: 'Other' }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4">
       <div className="max-w-2xl mx-auto">
+        {/* Error Message */}
+        {error && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
+
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
