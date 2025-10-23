@@ -2,9 +2,10 @@
   "name": "family-expense-tracker",
   "version": "1.0.0",
   "type": "module",
-   "scripts": {
-    "build": "next build",
-    "start": "next start"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.0",
