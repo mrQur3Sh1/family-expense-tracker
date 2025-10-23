@@ -257,8 +257,8 @@ const ExpenseTracker = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-4 sm:p-6">
+      <div className="max-w-3xl mx-auto">
         {/* Status bar */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -269,63 +269,65 @@ const ExpenseTracker = () => {
         </div>
 
         {/* Header / budget area */}
-        <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border border-purple-100">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                <Wallet className="text-purple-600" size={32} />
-                Family Budget
+        <div className="bg-white rounded-3xl shadow-xl p-4 sm:p-6 mb-6 border border-purple-100">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
+                <Wallet className="text-purple-600" size={28} />
+                <span>Family Budget</span>
               </h1>
-              <p className="text-gray-600 mt-1">Track your monthly expenses</p>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Track your monthly expenses</p>
             </div>
           </div>
 
           {budget ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span className="flex items-center gap-2">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm text-gray-600 gap-3">
+                <div className="flex items-center gap-2 text-sm">
                   <Calendar size={16} />
-                  {budget.days} days ({new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()})
-                </span>
+                  <span>{budget.days} days ({new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()})</span>
+                </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setShowAddBudget(true)} className="text-purple-600 hover:text-purple-700 flex items-center gap-1 px-2 py-1 rounded-lg">
-                    <Edit2 size={14} /> Edit
+                  <button onClick={() => setShowAddBudget(true)} className="text-purple-600 hover:text-purple-700 flex items-center gap-1 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-purple-200">
+                    <Edit2 size={14} /> <span className="sr-only">Edit budget</span>
                   </button>
-                  <button onClick={handleDeleteBudget} className="text-red-600 hover:text-red-700 px-2 py-1 rounded-lg">
+                  <button onClick={handleDeleteBudget} className="text-red-600 hover:text-red-700 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-red-200">
                     Delete
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              {/* Responsive cards: 1 column on mobile, 3 on md */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
                   <div className="text-sm text-gray-600 mb-2">Total Budget</div>
-                  <div className="text-xl font-bold text-purple-600">
+                  <div className="text-lg sm:text-xl font-bold text-purple-600">
                     ₨{budgetAmountNumber.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </div>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
                   <div className="text-sm text-gray-600 mb-2">Spent</div>
-                  <div className="text-xl font-bold text-red-600">
+                  <div className="text-lg sm:text-xl font-bold text-red-600">
                     ₨{totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </div>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
                   <div className="text-sm text-gray-600 mb-2">Remaining</div>
-                  <div className="text-xl font-bold text-green-600">
+                  <div className="text-lg sm:text-xl font-bold text-green-600">
                     ₨{(Number.isFinite(remaining) ? remaining : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="w-full bg-gray-200 rounded-full h-4 shadow-inner">
+              {/* Progress */}
+              <div className="space-y-2">
+                <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4 overflow-hidden">
                   <div
-                    className={`h-4 rounded-full transition-all duration-500 ${percentUsed > 90 ? 'bg-gradient-to-r from-red-500 to-red-600' : percentUsed > 70 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 'bg-gradient-to-r from-green-500 to-green-600'}`}
+                    className={`h-3 sm:h-4 rounded-full transition-all duration-500 ${percentUsed > 90 ? 'bg-gradient-to-r from-red-500 to-red-600' : percentUsed > 70 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 'bg-gradient-to-r from-green-500 to-green-600'}`}
                     style={{ width: `${Math.min(Math.max(percentUsed, 0), 100)}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">{(Number.isFinite(percentUsed) ? percentUsed.toFixed(1) : 0)}% used</span>
                   <span className={`font-medium ${remaining < 0 ? 'text-red-600' : percentUsed > 90 ? 'text-orange-600' : 'text-green-600'}`}>
                     {remaining < 0 ? `₨${Math.abs(remaining).toLocaleString(undefined, {minimumFractionDigits: 2})} over budget` : `₨${remaining.toLocaleString(undefined, {minimumFractionDigits: 2})} left`}
@@ -334,13 +336,13 @@ const ExpenseTracker = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center space-y-6">
-              <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-6">
-                <Wallet className="mx-auto text-purple-600 mb-4" size={48} />
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">Set Your Monthly Budget</h3>
-                <p className="text-gray-600 mb-6">Get started by setting your budget amount</p>
-                <button onClick={() => setShowAddBudget(true)} className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl transition-all flex items-center justify-center gap-2 font-semibold shadow-lg">
-                  <Plus size={20} /> Set Budget
+            <div className="text-center space-y-4">
+              <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-4">
+                <Wallet className="mx-auto text-purple-600 mb-3" size={40} />
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">Set Your Monthly Budget</h3>
+                <p className="text-sm text-gray-600 mb-4">Get started by setting your budget amount</p>
+                <button onClick={() => setShowAddBudget(true)} className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg shadow-lg text-base font-semibold">
+                  <Plus size={18} className="inline mr-2" /> Set Budget
                 </button>
               </div>
             </div>
@@ -349,67 +351,86 @@ const ExpenseTracker = () => {
 
         {/* Add Expense Button */}
         {budget && (
-          <button onClick={() => setShowAddExpense(true)} className="w-full mb-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-3xl shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 font-semibold text-lg border border-purple-200">
-            <Plus size={24} /> Add New Expense
-          </button>
+          <div className="mb-6">
+            <button onClick={() => setShowAddExpense(true)} className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-xl transition transform active:scale-95 text-lg font-semibold flex items-center justify-center gap-3">
+              <Plus size={20} /> Add New Expense
+            </button>
+          </div>
         )}
 
         {/* Add Budget Modal */}
         {showAddBudget && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-              <h2 className="text-2xl font-bold mb-6 text-center">Set Your Budget</h2>
-              <div className="space-y-6">
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowAddBudget(false)} />
+            <div className="w-full sm:max-w-md bg-white rounded-t-xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl transform translate-y-0 sm:translate-y-0"
+                 style={{ maxHeight: '92vh', overflow: 'auto' }}>
+              <h2 className="text-xl font-bold text-center mb-4">Set Your Budget</h2>
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Amount (₨)</label>
-                  <input type="number" value={budgetAmount} onChange={(e) => setBudgetAmount(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 text-lg" placeholder="150000" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Amount (₨)</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={budgetAmount}
+                    onChange={(e) => setBudgetAmount(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 text-lg"
+                    placeholder="150000"
+                    aria-label="Budget amount"
+                  />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Number of Days</label>
-                  <input type="number" value={budgetDays} onChange={(e) => setBudgetDays(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500" placeholder="30" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Number of Days</label>
+                    <input type="number" value={budgetDays} onChange={(e) => setBudgetDays(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300" aria-label="Number of days" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input type="date" value={budgetDate} onChange={(e) => setBudgetDate(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300" aria-label="Budget start date"/>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                  <input type="date" value={budgetDate} onChange={(e) => setBudgetDate(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500" />
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <button onClick={() => setShowAddBudget(false)} className="flex-1 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">Cancel</button>
-                  <button onClick={handleAddBudget} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold">Save Budget</button>
+                <div className="flex gap-3 mt-2">
+                  <button onClick={() => setShowAddBudget(false)} className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button onClick={handleAddBudget} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold">Save</button>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Add Expense Modal */}
+        {/* Add Expense Modal (bottom-sheet on mobile) */}
         {showAddExpense && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-              <h2 className="text-2xl font-bold mb-6 text-center">Add Expense</h2>
-              <div className="space-y-6">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowAddExpense(false)} />
+            <div className="w-full sm:max-w-md bg-white rounded-t-xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl" style={{ maxHeight: '92vh', overflow: 'auto' }}>
+              <h2 className="text-xl font-bold text-center mb-4">Add Expense</h2>
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">What did you buy?</label>
-                  <input type="text" value={expenseName} onChange={(e) => setExpenseName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500" placeholder="Vegetables, Rice, etc." />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">What did you buy?</label>
+                  <input type="text" value={expenseName} onChange={(e) => setExpenseName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Vegetables, Rice, etc." aria-label="Expense name" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Amount (₨)</label>
-                  <input type="number" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 text-lg" placeholder="5000" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₨)</label>
+                  <input type="number" inputMode="numeric" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg" placeholder="5000" aria-label="Expense amount" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                  <select value={expenseCategory} onChange={(e) => setExpenseCategory(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select value={expenseCategory} onChange={(e) => setExpenseCategory(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg">
                     {Object.entries(categories).map(([key, val]) => (
-                      <option key={key} value={key}>{val.icon} {val.label}</option>
+                      <option key={key} value={key}>{val.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                  <input type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg" aria-label="Expense date" />
                 </div>
-                <div className="flex gap-3 pt-4">
-                  <button onClick={() => setShowAddExpense(false)} className="flex-1 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">Cancel</button>
-                  <button onClick={handleAddExpense} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold">Add Expense</button>
+                <div className="flex gap-3 mt-2">
+                  <button onClick={() => setShowAddExpense(false)} className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button onClick={handleAddExpense} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold">Add Expense</button>
                 </div>
               </div>
             </div>
@@ -417,42 +438,40 @@ const ExpenseTracker = () => {
         )}
 
         {/* Expenses list */}
-        {expenses.length > 0 && (
-          <div className="bg-white rounded-3xl shadow-xl p-6 border border-purple-100">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <TrendingDown className="text-red-600" /> Recent Expenses
-              <span className="text-sm font-normal text-gray-500 ml-auto">{expenses.length} item{expenses.length !== 1 ? 's' : ''}</span>
-            </h2>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {expenses.map((expense) => (
-                <div key={expense.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl transition-all border border-gray-200">
-                  <div className="flex items-center gap-4">
-                    <div className="text-3xl">{categories[expense.category].icon}</div>
-                    <div>
-                      <div className="font-semibold text-gray-800">{expense.name}</div>
-                      <div className="text-sm text-gray-500">{new Date(expense.date).toLocaleDateString()} • {categories[expense.category].label}</div>
+        <div className="space-y-4">
+          {expenses.length > 0 ? (
+            <div className="bg-white rounded-3xl shadow-xl p-4 sm:p-6 border border-purple-100">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><TrendingDown className="text-red-600" /> Recent Expenses <span className="text-sm text-gray-500 ml-auto">{expenses.length} item{expenses.length !== 1 ? 's' : ''}</span></h2>
+              <div className="space-y-3">
+                {expenses.map((expense) => (
+                  <div key={expense.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                    <div className="flex items-start sm:items-center gap-3 w-full">
+                      <div className="text-2xl">{categories[expense.category]?.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 truncate">{expense.name}</div>
+                        <div className="text-xs text-gray-500">{new Date(expense.date).toLocaleDateString()} • {categories[expense.category]?.label}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 sm:mt-0 flex items-center gap-3">
+                      <div className="font-bold text-red-600 text-lg">₨{toNumber(expense.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                      <button onClick={() => handleDeleteExpense(expense.id)} aria-label={`Delete ${expense.name}`} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-red-600 text-lg">₨{toNumber(expense.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                    <button onClick={() => handleDeleteExpense(expense.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {expenses.length === 0 && budget && (
-          <div className="bg-white rounded-3xl shadow-xl p-8 border border-purple-100 text-center">
-            <TrendingDown className="mx-auto text-gray-400 mb-4" size={48} />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No expenses yet</h3>
-            <p className="text-gray-600 mb-6">Start tracking your spending to stay within budget</p>
-            <button onClick={() => setShowAddExpense(true)} className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold">Add Your First Expense</button>
-          </div>
-        )}
+          ) : (
+            budget && (
+              <div className="bg-white rounded-3xl shadow-xl p-6 border border-purple-100 text-center">
+                <h3 className="text-lg font-semibold text-gray-800">No expenses yet</h3>
+                <p className="text-sm text-gray-600 mb-4">Start tracking your spending to stay within budget</p>
+                <button onClick={() => setShowAddExpense(true)} className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold">Add Your First Expense</button>
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   );
