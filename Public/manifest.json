@@ -1,6 +1,6 @@
 {
   "name": "Family Expense Tracker",
-  "short_name": "Expense Tracker", 
+  "short_name": "Expense Tracker",
   "description": "Track family expenses",
   "start_url": "/",
   "display": "standalone",
@@ -13,7 +13,7 @@
       "type": "image/png"
     },
     {
-      "src": "/icon-512x512.png", 
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

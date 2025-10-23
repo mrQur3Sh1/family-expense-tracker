@@ -13,7 +13,8 @@ export default async (req, context) => {
   }
 
   try {
-    const sql = neon(Netlify.env.get('DATABASE_URL'));
+    // Fix: Use NETLIFY_DATABASE_URL instead of DATABASE_URL
+    const sql = neon(Netlify.env.get('NETLIFY_DATABASE_URL'));
 
     if (req.method === 'GET') {
       const [budget] = await sql`
