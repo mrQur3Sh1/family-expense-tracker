@@ -1,11 +1,11 @@
 {
   "name": "Family Expense Tracker",
-  "short_name": "Expense Tracker",
+  "short_name": "Expense Tracker", 
   "description": "Track family expenses",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#9333ea",
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -13,7 +13,7 @@
       "type": "image/png"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/icon-512x512.png", 
       "sizes": "512x512",
       "type": "image/png"
     }
