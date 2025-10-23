@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Calendar, Plus, Trash2, TrendingDown, Edit2, Settings, PiggyBank } from 'lucide-react';
+import { Wallet, Calendar, Plus, Trash2, TrendingDown, Edit2, Settings, PiggyBank, Lock } from 'lucide-react';
 
 const API_BASE = '/api';
 
 const ExpenseTracker = () => {
+  // PIN Authentication states
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  
+  // App states
   const [budget, setBudget] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [showAddBudget, setShowAddBudget] = useState(false);
@@ -22,9 +28,13 @@ const ExpenseTracker = () => {
   const [expenseCategory, setExpenseCategory] = useState('groceries');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Initialize app immediately with local data
+  // Check authentication on mount
   useEffect(() => {
-    initializeApp();
+    const auth = localStorage.getItem('expense_auth');
+    if (auth === 'authenticated') {
+      setIsAuthenticated(true);
+      initializeApp();
+    }
     
     // Monitor online status
     const handleOnline = () => setIsOnline(true);
@@ -38,6 +48,29 @@ const ExpenseTracker = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  const handleLogin = () => {
+    const correctPin = '1234'; // Change this to your desired PIN
+    
+    if (pin === correctPin) {
+      setIsAuthenticated(true);
+      localStorage.setItem('expense_auth', 'authenticated');
+      setPinError('');
+      initializeApp();
+    } else {
+      setPinError('Invalid PIN');
+      setPin('');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('expense_auth');
+    setBudget(null);
+    setExpenses([]);
+    setPin('');
+    setPinError('');
+  };
 
   const initializeApp = () => {
     // Load from localStorage immediately for instant startup
@@ -139,7 +172,7 @@ const ExpenseTracker = () => {
     if (!expenseName || !expenseAmount) return;
     
     const newExpense = {
-      id: Date.now(), // Temporary ID
+      id: Date.now(),
       name: expenseName,
       amount: parseFloat(expenseAmount),
       category: expenseCategory,
@@ -232,32 +265,100 @@ const ExpenseTracker = () => {
     { name: 'Grocery Shopping', amount: 5000, category: 'groceries' },
     { name: 'Fuel', amount: 3000, category: 'transportation' },
     { name: 'Electricity Bill', amount: 8000, category: 'utilities' },
+    { name: 'Internet Bill', amount: 2000, category: 'utilities' },
   ];
 
+  // Show PIN screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-purple-100">
+          <div className="text-center mb-8">
+            <div className="bg-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Lock className="text-purple-600" size={32} />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Family Budget</h1>
+            <p className="text-gray-600">Enter PIN to access your expenses</p>
+          </div>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                Security PIN
+              </label>
+              <input
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-2xl tracking-widest font-mono"
+                placeholder="••••"
+                maxLength={4}
+                autoFocus
+              />
+            </div>
+            
+            {pinError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-center">
+                {pinError}
+              </div>
+            )}
+            
+            <button
+              onClick={handleLogin}
+              className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all font-semibold text-lg shadow-lg"
+            >
+              Unlock App
+            </button>
+            
+            <div className="text-center space-y-2">
+              <div className="text-sm text-gray-500">
+                Default PIN: <span className="font-mono bg-gray-100 px-2 py-1 rounded">1234</span>
+              </div>
+              <div className="text-xs text-gray-400">
+                Change PIN in the source code for security
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main App UI
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Status Bar */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-orange-500'}`}></div>
-            <span className="text-xs text-gray-600">
-              {isOnline ? 'Online' : 'Offline Mode'}
-            </span>
-          </div>
+      {/* Status and Logout Bar */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+          <span className="text-xs text-gray-600">
+            {isOnline ? 'Online' : 'Offline Mode'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
           {error && (
             <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
               Working offline
             </div>
           )}
+          <button
+            onClick={handleLogout}
+            className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all shadow-lg"
+            title="Logout"
+          >
+            <Lock size={16} />
+          </button>
         </div>
+      </div>
 
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border border-purple-100">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                <PiggyBank className="text-purple-600" size={32} />
+                <Wallet className="text-purple-600" size={32} />
                 Family Budget
               </h1>
               <p className="text-gray-600 mt-1">Track your monthly expenses</p>
@@ -413,7 +514,7 @@ const ExpenseTracker = () => {
           </div>
         )}
 
-        {/* Modals remain the same but with enhanced styling */}
+        {/* Add Budget Modal */}
         {showAddBudget && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
@@ -473,7 +574,7 @@ const ExpenseTracker = () => {
           </div>
         )}
 
-        {/* Enhanced Add Expense Modal */}
+        {/* Add Expense Modal */}
         {showAddExpense && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
@@ -549,7 +650,7 @@ const ExpenseTracker = () => {
           </div>
         )}
 
-        {/* Enhanced Expenses List */}
+        {/* Expenses List */}
         {expenses.length > 0 && (
           <div className="bg-white rounded-3xl shadow-xl p-6 border border-purple-100">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
