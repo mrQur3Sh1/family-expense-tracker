@@ -1,9 +1,27 @@
 import { neon } from '@neondatabase/serverless';
 
-export default async (req, context) => {
-  const sql = neon(process.env.NETLIFY_DATABASE_URL);
-  
+export default async (req) => {
+  // Handle CORS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
+    const sql = neon(process.env.NETLIFY_DATABASE_URL);
     const body = await req.json();
     const { name, amount, category, date } = body;
     
@@ -15,17 +33,23 @@ export default async (req, context) => {
     
     return new Response(JSON.stringify(expense), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   } catch (error) {
+    console.error('Error adding expense:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 };
 
 export const config = {
-  path: "/api/expenses",
-  method: "POST"
+  path: "/api/expenses"
 };
