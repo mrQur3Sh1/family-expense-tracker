@@ -197,21 +197,21 @@ const ExpenseTracker = () => {
                       <DollarSign className="mx-auto mb-1 sm:mb-2 text-purple-600" size={20} />
                       <div className="text-xs text-gray-600 mb-1">Budget</div>
                       <div className="text-base sm:text-xl font-bold text-purple-600 truncate">
-                        ₨{(budgetAmountNumber / 1000).toFixed(0)}k
+                        ₨{budgetAmountNumber.toLocaleString()}
                       </div>
                     </div>
                     <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl sm:rounded-2xl border border-red-200 transform transition-all hover:scale-105">
                       <TrendingDown className="mx-auto mb-1 sm:mb-2 text-red-600" size={20} />
                       <div className="text-xs text-gray-600 mb-1">Spent</div>
                       <div className="text-base sm:text-xl font-bold text-red-600 truncate">
-                        ₨{(totalExpenses / 1000).toFixed(0)}k
+                        ₨{totalExpenses.toLocaleString()}
                       </div>
                     </div>
                     <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl border border-green-200 transform transition-all hover:scale-105">
                       <Wallet className="mx-auto mb-1 sm:mb-2 text-green-600" size={20} />
                       <div className="text-xs text-gray-600 mb-1">Left</div>
                       <div className="text-base sm:text-xl font-bold text-green-600 truncate">
-                        ₨{(Math.max(remaining, 0) / 1000).toFixed(0)}k
+                        ₨{Math.max(remaining, 0).toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -279,7 +279,7 @@ const ExpenseTracker = () => {
                       </div>
                       <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                         <span className="font-bold text-red-600 text-sm sm:text-lg whitespace-nowrap">
-                          ₨{(toNumber(expense.amount) / 1000).toFixed(1)}k
+                          ₨{toNumber(expense.amount).toLocaleString()}
                         </span>
                         <button onClick={() => handleDeleteExpense(expense.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all">
                           <Trash2 size={16} />
@@ -320,7 +320,7 @@ const ExpenseTracker = () => {
                             <span className="text-xs sm:text-sm font-medium text-gray-700">{cat.label}</span>
                           </div>
                           <span className="text-xs sm:text-sm font-bold text-gray-800">
-                            ₨{(cat.total / 1000).toFixed(1)}k
+                            ₨{cat.total.toLocaleString()}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
