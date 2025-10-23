@@ -3,11 +3,19 @@
   publish = "dist"
   functions = "netlify/functions"
 
+# Static files first (before catch-all)
+[[redirects]]
+  from = "/manifest.json"
+  to = "/manifest.json"
+  status = 200
+
+# API redirects
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
+# Catch-all redirect (MUST be last)
 [[redirects]]
   from = "/*"
   to = "/index.html"
