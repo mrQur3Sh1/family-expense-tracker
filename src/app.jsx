@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+{error && <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">Working offline</div>}import React, { useState, useEffect } from 'react';
 import { Wallet, Calendar, Plus, Trash2, TrendingDown, Edit2, PieChart, DollarSign, AlertCircle } from 'lucide-react';
 
 const toNumber = (v) => {
@@ -13,12 +13,15 @@ const toNumber = (v) => {
   }
 };
 
+const API_BASE = '/api';
+
 const ExpenseTracker = () => {
   const [budget, setBudget] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [showAddBudget, setShowAddBudget] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [error, setError] = useState(null);
 
   const [budgetAmount, setBudgetAmount] = useState('');
   const [budgetDays, setBudgetDays] = useState('30');
@@ -63,9 +66,56 @@ const ExpenseTracker = () => {
         console.warn('parse saved expenses', e);
       }
     }
+
+    if (navigator.onLine) syncWithBackend();
   };
 
-  const handleAddBudget = () => {
+  const syncWithBackend = async () => {
+    try {
+      // Budget sync
+      const budgetRes = await fetch(`${API_BASE}/budget`);
+      if (budgetRes.ok) {
+        const budgetData = await budgetRes.json();
+        if (budgetData) {
+          const formattedBudget = {
+            amount: toNumber(budgetData.amount),
+            startDate: budgetData.start_date,
+            endDate: budgetData.end_date,
+            days: budgetData.days
+          };
+          setBudget(formattedBudget);
+          localStorage.setItem('budget', JSON.stringify(formattedBudget));
+        } else {
+          setBudget(null);
+          localStorage.removeItem('budget');
+        }
+      } else {
+        setBudget(null);
+        localStorage.removeItem('budget');
+      }
+
+      // Expenses sync
+      const expensesRes = await fetch(`${API_BASE}/expenses`);
+      if (expensesRes.ok) {
+        const expensesData = await expensesRes.json();
+        const formattedExpenses = (expensesData || []).map(exp => ({
+          id: exp.id,
+          name: exp.name,
+          amount: toNumber(exp.amount),
+          category: exp.category,
+          date: exp.date
+        }));
+        setExpenses(formattedExpenses);
+        localStorage.setItem('expenses', JSON.stringify(formattedExpenses));
+      }
+      setError(null);
+    } catch (err) {
+      console.log('Backend sync failed', err);
+      setError('Offline or sync error');
+    }
+  };
+
+  const handleAddBudget = async () => {
     if (!budgetAmount || !budgetDays) return;
     const endDate = new Date(budgetDate);
     endDate.setDate(endDate.getDate() + parseInt(budgetDays, 10));
@@ -82,16 +132,41 @@ const ExpenseTracker = () => {
     setBudgetDays('30');
     setBudgetDate(new Date().toISOString().split('T')[0]);
     setShowAddBudget(false);
+
+    if (isOnline) {
+      try {
+        await fetch(`${API_BASE}/budget`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(budgetData)
+        });
+      } catch (err) {
+        console.warn('backend save budget failed', err);
+      }
+    }
   };
 
-  const handleDeleteBudget = () => {
-    const ok = window.confirm('Delete current budget?');
+  const handleDeleteBudget = async () => {
+    const ok = window.confirm('Delete current budget? This will remove it from the app and the database.');
     if (!ok) return;
+
     setBudget(null);
     localStorage.removeItem('budget');
+
+    if (isOnline) {
+      try {
+        const res = await fetch(`${API_BASE}/budget`, { method: 'DELETE' });
+        if (!res.ok) {
+          console.warn('Server delete failed', res.status);
+          syncWithBackend();
+        }
+      } catch (err) {
+        console.warn('Delete call failed', err);
+      }
+    }
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!expenseName || !expenseAmount) return;
 
     const newExpense = {
@@ -111,12 +186,53 @@ const ExpenseTracker = () => {
     setExpenseCategory('groceries');
     setExpenseDate(new Date().toISOString().split('T')[0]);
     setShowAddExpense(false);
+
+    if (isOnline) {
+      try {
+        const response = await fetch(`${API_BASE}/expenses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: newExpense.name,
+            amount: newExpense.amount,
+            category: newExpense.category,
+            date: newExpense.date
+          })
+        });
+
+        if (response.ok) {
+          const savedExpense = await response.json();
+          const normalized = {
+            id: savedExpense.id ?? newExpense.id,
+            name: savedExpense.name ?? newExpense.name,
+            amount: toNumber(savedExpense.amount ?? newExpense.amount),
+            category: savedExpense.category ?? newExpense.category,
+            date: savedExpense.date ?? newExpense.date
+          };
+          const replaced = updatedExpenses.map(exp => exp.id === newExpense.id ? normalized : exp);
+          setExpenses(replaced);
+          localStorage.setItem('expenses', JSON.stringify(replaced));
+        }
+      } catch (err) {
+        console.warn('Backend save failed, data saved locally', err);
+      }
+    }
   };
 
-  const handleDeleteExpense = (id) => {
+  const handleDeleteExpense = async (id) => {
     const updatedExpenses = expenses.filter(exp => exp.id !== id);
     setExpenses(updatedExpenses);
     localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
+
+    if (isOnline) {
+      try {
+        await fetch(`${API_BASE}/expenses?id=${id}`, {
+          method: 'DELETE'
+        });
+      } catch (err) {
+        console.warn('Backend delete failed', err);
+      }
+    }
   };
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + toNumber(exp.amount), 0);
@@ -447,7 +563,5 @@ const ExpenseTracker = () => {
     </div>
   );
 };
-
-//FINAL EXPORT
 
 export default ExpenseTracker;
